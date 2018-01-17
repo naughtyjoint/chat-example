@@ -1,0 +1,6 @@
+{
+  "host": "http://localhost/phpmyadmin/index.php",
+  "user": "root",
+  "password": "",
+  "database": "test"
+}
