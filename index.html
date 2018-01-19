@@ -9,16 +9,22 @@
 
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages { list-style-type: none; margin: 100px; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
-      #messages { margin-bottom: 80px }
+      #messages {margin: 50px 50px 80px 50%;}
+      #infobar {width: 50%; padding-left: 100px; float: left}
     </style>
   </head>
   <body>
+    <div id = "infobar">
+      <div id = "amount"></div>
+      <div id = "online_id">
+        <p>在線名單：</p>
+      </div>
+    </div>
     <ul id="messages"></ul>
     <form action="" id="form">
-      <input id="s" autocomplete="off" placeholder="試著私訊別人"/><button id="clear">Clear</button>
       <input id="m" autocomplete="off"/><button id="send">Send</button>
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -34,40 +40,42 @@
           var socket = io.connect('', {query: 'name='+name});
 
           socket.on('connected', function(msg){
-              $('#messages').append($('<li>').text(msg));
+              $('#messages').append($('<li>').text(msg.name));
               window.scrollTo(0, document.body.scrollHeight);
+              $('#amount').html(msg.amount);
+              $('#online_id').html(msg.userlist);
           });
 
-          socket.on('changename', function(username){
-              do {
-                  name = prompt(username + " has been used, please change a name :)");
-              }while(name == null || name == "");
-
-              socket = io.connect('', {query: 'name='+name});
+          socket.on('connected_info', function(msg){
+              $('#amount').html(msg.amount);
+              $('#online_id').html(msg.userlist);
           });
 
-          /*$('#form').onkeypress(function(e){
-              if (e.which == 13)
-                  console.log("enter is press by "+name);
-                //$('#send').click();
-              return false;
-          });*/
+          socket.on('load history', function(history){
+              history.forEach(
+                  function(value){
+                      msg = value.name+': '+value.log;
+                      $('#messages').prepend($('<li>').text(msg));
+                      window.scrollTo(0, document.body.scrollHeight);
+                  });
+          });
 
-          /*document.onkeydown=function(){
-              if(window.event.keyCode=='13'){
-                  console.log("enter is press by "+name);
+          socket.on('showhislog', function(msg){
+              if(msg.hislognum>0){
+                  $('#messages').html(" ");
+                  msg.hislog.forEach(function(element){
+                      $('#messages').append($('<li>').text(element));
+                      console.log(element);
+                  });
+              }else{
+                  $('#messages').html(" ");
               }
-          };*/
+          });
+
+
 
           $('#send').click(function(){
               console.log("enter is press by "+name);
-              if($('#s').val() != "" && $('#m').val() != "")
-              {
-                  socket.emit('secret message', name, $('#s').val(), $('#m').val());
-                  $('#m').val('');
-                  return false;
-              }
-
 
               if($('#m').val() != "")
               {
@@ -80,32 +88,19 @@
               return false;
           });
 
-          $('#clear').click(function(){
-              $('#messages').text("");
-              return false;
-          });
 
-
-          $('#m').on('keyup', function(){
-              socket.emit('typing', name);
-              //$('#messages').append($('<li>').text('someone is typing'));
-              //return false;
-          });//*/
 
           socket.on('chat message', function(name, msg){
             $('#messages').append($('<li>').text(name+": "+msg));
             window.scrollTo(0, document.body.scrollHeight);
           });
 
-          socket.on('whoistyping', function(name){
-              console.log(name + " is typing...");
-
-          });
-
 
           socket.on('disconnected', function(msg){
-              $('#messages').append($('<li>').text(msg));
+              $('#messages').append($('<li>').text(msg.name));
               window.scrollTo(0, document.body.scrollHeight);
+              $('#amount').html(msg.amount);
+              $('#online_id').html(msg.userlist);
           });
 
 
